@@ -6,7 +6,7 @@ defmodule Speedtest.MixProject do
       app: :speedtest,
       version: "0.1.0",
       elixir: "~> 1.8",
-      build_embedded: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),

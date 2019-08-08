@@ -7,8 +7,7 @@ defmodule Speedtest do
 
   import Speedtest.Decoder
 
-  defstruct local: [],
-            settings: [],
+  defstruct config: [],
             servers: [],
             include: nil,
             exclude: nil,
@@ -66,7 +65,7 @@ defmodule Speedtest do
   def choose_best_server(servers) do
     reply =
       Enum.map(servers, fn s ->
-        url = url(to_string(s.host))
+        url = url(s.host)
         ping = Speedtest.Ping.ping(url)
         Map.put(s, :ping, ping)
       end)
@@ -82,8 +81,7 @@ defmodule Speedtest do
   by the speedtest.net configuration
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
-
-    ##TODO:: implement function
+    ## TODO:: implement function
     data = []
     {:ok, data}
   end
@@ -94,8 +92,7 @@ defmodule Speedtest do
   by the speedtest.net configuration
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
-
-    ##TODO:: implement function
+    ## TODO:: implement function
     data = []
     {:ok, data}
   end
@@ -106,15 +103,7 @@ defmodule Speedtest do
   def distance(%Speedtest{} = speedtest \\ %Speedtest{}) do
     servers =
       Enum.map(speedtest.servers, fn s ->
-        local_lat = to_string(speedtest.local.lat)
-        local_lat = String.to_float(local_lat)
-        local_lng = to_string(speedtest.local.lon)
-        local_lng = String.to_float(local_lng)
-        remote_lat = to_string(s.lat)
-        remote_lat = String.to_float(remote_lat)
-        remote_lng = to_string(s.lon)
-        remote_lng = String.to_float(remote_lng)
-        distance = Geocalc.distance_between([local_lat, local_lng], [remote_lat, remote_lng])
+        distance = Geocalc.distance_between([speedtest.config.client.lat, speedtest.config.client.lon], [s.lat, s.lon])
         Map.put(s, :distance, distance)
       end)
 
@@ -130,13 +119,11 @@ defmodule Speedtest do
 
     {_, result} = fetch_config_data()
 
-    ip_data = ip(result)
-
-    settings = settings(result)
+    config = config(result)
 
     {_, result} = fetch_servers(init)
 
-    speedtest = %{result | local: ip_data, settings: settings}
+    speedtest = %{result | config: config}
 
     {_, result} = distance(speedtest)
 
