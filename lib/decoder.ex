@@ -111,11 +111,14 @@ end)
 
     upload_count = upload.maxchunkcount / size_count
 
-    counts = %{upload: upload_count, download: Float.round(download.threads)}
+    upload_count = Float.round(upload_count)
+
+    counts = %{upload: upload_count, download: download.threads}
 
     threads = %{upload: upload.threads, download: server_config.threadcount * 2}
 
     length = %{upload: upload.testlength, download: download.testlength}
+    
 
     reply = %{
       client: client,
@@ -124,7 +127,7 @@ end)
       counts: counts,
       threads: threads,
       length: length,
-      upload_max: upload.maxchunkcount
+      upload_max: upload_count * size_count
     }
 
     reply
