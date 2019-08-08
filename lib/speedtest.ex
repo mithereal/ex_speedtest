@@ -81,7 +81,9 @@ defmodule Speedtest do
   by the speedtest.net configuration
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
-    ## TODO:: implement function
+    {_, urls} = generate_download_urls(speedtest)
+
+    IO.inspect urls
     data = []
     {:ok, data}
   end
@@ -168,4 +170,17 @@ defmodule Speedtest do
     reply = %{st | threads: threads, include: include, exclude: exclude}
     {:ok, reply}
   end
+
+  def generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do 
+
+    urls = Enum.map(speedtest.config.sizes.download, fn(s) -> 
+      size = to_string(s)
+      speedtest.selected_server.host <> "/speedtest/random" <> size <> "x" <> size <> ".jpg"
+    end)
+
+   urls =  Enum.shuffle(urls) 
+
+   {:ok, urls}
+  end
+
 end
