@@ -15,7 +15,7 @@ defmodule Speedtest.Result do
             bytes_sent: 0,
             share: nil
 
-  def create({upload_reply, download_reply}) do
+  def create(speedtest, {upload_reply, download_reply}) do
     upload_times =
       Enum.map(upload_reply, fn x ->
         x.elapsed_time
@@ -31,14 +31,14 @@ defmodule Speedtest.Result do
         to_integer(x.bytes)
       end)
 
-    upload_times = Enum.sum(upload_times)
+    upload_time = Enum.sum(upload_times)
 
     upload_sizes =
       Enum.map(upload_reply, fn x ->
         to_integer(x.bytes)
       end)
 
-    upload_avg = upload_times / Enum.count(upload_reply)
+    upload_avg = upload_time / Enum.count(upload_reply)
 
     upload_size_total = Enum.sum(upload_sizes)
 
@@ -48,27 +48,23 @@ defmodule Speedtest.Result do
 
     download_size_total = Enum.sum(download_sizes)
 
-    data = %{
-      avg_upload_microseconds: upload_avg,
-      avg_download_microseconds: download_avg,
-      upload_total: upload_size_total,
-      download_total: download_size_total,
-      raw: %{upload: upload_reply, download: download_reply}
+    download = download_total / download_time * 8.0
+
+    upload = upload_total / upload_time * 8.0
+
+    result = %Result{
+      download: download,
+      upload: upload,
+      ping: speedtest.selected_server.ping,
+      server: speedtest.selected_server,
+      client: speedtest.client,
+      timestamp: DateTime.utc_now(),
+      bytes_recieved: download_total,
+      bytes_sent: upload_total,
+      share: nil
     }
 
-    # result = %Result{
-    #   download: nil,
-    #   upload: nil,
-    #   ping: nil,
-    #   server: nil,
-    #   client: nil,
-    #   timestamp: nil,
-    #   bytes_recieved: 0,
-    #   bytes_sent: 0,
-    #   share: share
-    # }
-
-    {:ok, data}
+    {:ok, result}
   end
 
   def share(%Result{} = result) do
@@ -80,14 +76,18 @@ defmodule Speedtest.Result do
       )
       |> Base.encode16()
 
+    download = round(result.download / 1000.0)
+    ping = round(result.ping)
+    upload = round(result.upload / 1000.0)
+
     api_data = [
       "recommendedserverid=" <> to_string(result.server.id),
-      "ping=" <> to_string(result.ping),
+      "ping=" <> to_string(ping),
       "screenresolution=",
       "promo=",
-      "download=" <> to_string(result.download),
+      "download=" <> to_string(download),
       "screendpi=",
-      "upload=" <> to_string(result.upload),
+      "upload=" <> to_string(upload),
       "testmethod=http",
       "hash=" <> hash,
       "touchscreen=none",
@@ -103,7 +103,7 @@ defmodule Speedtest.Result do
     body = Enum.join(api_data, "&")
     {_, response} = HTTPoison.post(url, body, headers)
 
-    image = "response.image"
+    image = "response.body.resultid"
 
     share = "http://www.speedtest.net/result/" <> image <> "/png"
 

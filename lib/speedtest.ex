@@ -183,7 +183,7 @@ defmodule Speedtest do
 
     replys = {upload_reply, download_reply}
 
-    result = Result.create(replys)
+    result = Result.create(speedtest, replys)
 
     speedtest = %{speedtest | result: result}
 
