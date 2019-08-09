@@ -32,7 +32,7 @@ defmodule Speedtest.MixProject do
       {:httpoison, "~> 1.5"},
       {:sweet_xml, "~> 0.6.6"},
       {:geocalc, "~> 0.5"},
-      {:inch_ex, ">= 0.0.0", only: :docs}
+      {:inch_ex, ">= 0.0.0", only: [:test, :dev]}
     ]
   end
 
