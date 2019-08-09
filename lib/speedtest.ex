@@ -5,14 +5,17 @@ defmodule Speedtest do
 
   alias Speedtest.Ping
 
-  import Speedtest.Decoder
+  alias Speedtest.Decoder
+
+  alias Speedtest.Result
 
   defstruct config: [],
             servers: [],
             include: nil,
             exclude: nil,
             threads: nil,
-            selected_server: nil
+            selected_server: nil,
+            result: nil
 
   @doc """
   Retrieve a the list of speedtest.net servers, optionally filtered
@@ -30,7 +33,7 @@ defmodule Speedtest do
 
     {_, response} = fetch_server(first)
 
-    result = server(response)
+    result = Decoder.server(response)
 
     result =
       case speedtest.include == nil do
@@ -65,7 +68,7 @@ defmodule Speedtest do
   def choose_best_server(servers) do
     reply =
       Enum.map(servers, fn s ->
-        url = url(s.host)
+        url = Decoder.url(s.host)
         ping = Speedtest.Ping.ping(url)
         Map.put(s, :ping, ping)
       end)
@@ -104,7 +107,7 @@ defmodule Speedtest do
   end
 
   def calculate(data) do
-    data.bytes / (1 / :math.pow(10, 3)) * data.elapsed_time 
+    data.bytes / (1 / :math.pow(10, 3)) * data.elapsed_time
   end
 
   @doc """
@@ -145,7 +148,7 @@ defmodule Speedtest do
 
     {_, result} = fetch_config_data()
 
-    config = config(result)
+    config = Decoder.config(result)
 
     {_, result} = fetch_servers(init)
 
@@ -159,10 +162,12 @@ defmodule Speedtest do
 
     speedtest = %{result | selected_server: selected_server}
 
-    # download_reply = download(speedtest)
-    # upload_reply = upload(speedtest)
-    # data = {upload_reply, download_reply}
-    # result = Result.create(reply)
+    download_reply = download(speedtest)
+    upload_reply = []
+    replys = {upload_reply, download_reply}
+    result = Result.create(replys)
+
+    speedtest = %{result | result: result}
 
     {:ok, speedtest}
   end
