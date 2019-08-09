@@ -64,7 +64,9 @@ defmodule Speedtest.Result do
       share: nil
     }
 
-    {:ok, result}
+    reply = %{speedtest | result: result}
+
+    {:ok, reply}
   end
 
   def share(%Result{} = result) do
