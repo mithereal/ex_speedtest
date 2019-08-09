@@ -116,9 +116,20 @@ defmodule Speedtest do
   by the speedtest.net configuration
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
-    ## TODO:: implement function
-    data = []
-    {:ok, data}
+    {_, data} = generate_upload_data(speedtest)
+
+    responses =
+      Enum.map(data, fn {url, size} ->
+        {time_in_microseconds, return} =
+          :timer.tc(fn ->
+            headers = [{"Content-length", size}]
+            body = ""
+            {_, reply} = HTTPoison.post(url, body, headers)
+            reply
+          end)
+      end)
+
+    {:ok, responses}
   end
 
   @doc """
@@ -162,12 +173,16 @@ defmodule Speedtest do
 
     speedtest = %{result | selected_server: selected_server}
 
-    download_reply = download(speedtest)
-    upload_reply = []
-    replys = {upload_reply, download_reply}
-    result = Result.create(replys)
+    {_, download_reply } = download(speedtest)
 
-    speedtest = %{result | result: result}
+    {_, upload_reply, _ } = upload(speedtest)
+
+    replys = {upload_reply, download_reply}
+
+   result = []
+  #  result = Result.create(replys)
+
+    speedtest = %{speedtest | result: result}
 
     {:ok, speedtest}
   end
@@ -215,5 +230,14 @@ defmodule Speedtest do
     urls = Enum.shuffle(urls)
 
     {:ok, urls}
+  end
+
+  def generate_upload_data(%Speedtest{} = speedtest \\ %Speedtest{}) do
+    data =
+      Enum.map(speedtest.config.sizes.upload, fn s ->
+        {speedtest.selected_server.url, to_string(s)}
+      end)
+
+    {:ok, data}
   end
 end
