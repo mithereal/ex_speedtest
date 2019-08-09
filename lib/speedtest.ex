@@ -86,8 +86,6 @@ defmodule Speedtest do
 
   @doc """
   Test download speed against speedtest.net
-  A threads value of nil will fall back to those dictated
-  by the speedtest.net configuration
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Testing download speed...")
@@ -113,14 +111,12 @@ defmodule Speedtest do
     {:ok, responses}
   end
 
-  def calculate(data) do
+  defp calculate(data) do
     data.bytes / (1 / :math.pow(10, 3)) * data.elapsed_time
   end
 
   @doc """
   Test upload speed against speedtest.net
-  A threads value of nil will fall back to those dictated
-  by the speedtest.net configuration
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Testing Upload Speed...")
@@ -218,6 +214,9 @@ defmodule Speedtest do
     {:ok, reply}
   end
 
+  @doc """
+  Ping an IP and return a tuple with the time
+  """
   def ping(ip) do
     Ping.ping(ip)
   end

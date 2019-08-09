@@ -5,6 +5,10 @@ defmodule Speedtest.Result do
 
   @default_key "297aae72"
 
+  @moduledoc """
+  A speedtest result.
+  """
+
   defstruct download: nil,
             upload: nil,
             ping: nil,
@@ -15,6 +19,9 @@ defmodule Speedtest.Result do
             bytes_sent: 0,
             share: nil
 
+  @doc """
+  Create a result from a speedtest
+  """
   def create(speedtest, {upload_reply, download_reply}) do
     upload_times =
       Enum.map(upload_reply, fn x ->
@@ -69,6 +76,9 @@ defmodule Speedtest.Result do
     {:ok, reply}
   end
 
+  @doc """
+  Share the results with speedtest.net
+  """
   def share(%Result{} = result) do
     config_key = Application.get_env(:speedtest, :key)
 
