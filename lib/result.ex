@@ -103,7 +103,9 @@ defmodule Speedtest.Result do
     body = Enum.join(api_data, "&")
     {_, response} = HTTPoison.post(url, body, headers)
 
-    share = "http://www.speedtest.net/result/" <> "/png"
+    image = "response.image"
+
+    share = "http://www.speedtest.net/result/" <> image <> "/png"
 
     %{result | share: share}
   end
