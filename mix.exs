@@ -31,7 +31,8 @@ defmodule Speedtest.MixProject do
       {:ex_doc, "~> 0.14", only: :dev, runtime: false},
       {:httpoison, "~> 1.5"},
       {:sweet_xml, "~> 0.6.6"},
-      {:geocalc, "~> 0.5"}
+      {:geocalc, "~> 0.5"},
+      {:inch_ex, ">= 0.0.0", only: :docs}
     ]
   end
 
