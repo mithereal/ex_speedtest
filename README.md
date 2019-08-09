@@ -15,6 +15,10 @@ def deps do
 end
 ```
 
+[![Build Status](https://travis-ci.org/mithereal/speedtest.svg?branch=master)](https://travis-ci.org/mithereal/speedtest)
+
+[![Inline docs](http://inch-ci.org/github/mithereal/speedtest.svg)](http://inch-ci.org/github/mithereal/speedtest)
+
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/speedtest](https://hexdocs.pm/speedtest).
