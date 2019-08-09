@@ -130,7 +130,7 @@ defmodule Speedtest do
             reply
           end)
 
-          %{elapsed_time: time_in_microseconds, bytes: size, url: url}
+        %{elapsed_time: time_in_microseconds, bytes: size, url: url}
       end)
 
     {:ok, responses}
@@ -177,9 +177,9 @@ defmodule Speedtest do
 
     speedtest = %{result | selected_server: selected_server}
 
-    {_, download_reply } = download(speedtest)
+    {_, download_reply} = download(speedtest)
 
-    {_, upload_reply } = upload(speedtest)
+    {_, upload_reply} = upload(speedtest)
 
     replys = {upload_reply, download_reply}
 
