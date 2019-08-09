@@ -9,6 +9,8 @@ defmodule Speedtest do
 
   alias Speedtest.Result
 
+  require Logger
+
   defstruct config: [],
             servers: [],
             include: nil,
@@ -127,6 +129,8 @@ defmodule Speedtest do
             {_, reply} = HTTPoison.post(url, body, headers)
             reply
           end)
+
+          %{elapsed_time: time_in_microseconds, bytes: size, url: url}
       end)
 
     {:ok, responses}
@@ -175,12 +179,11 @@ defmodule Speedtest do
 
     {_, download_reply } = download(speedtest)
 
-    {_, upload_reply, _ } = upload(speedtest)
+    {_, upload_reply } = upload(speedtest)
 
     replys = {upload_reply, download_reply}
 
-   result = []
-  #  result = Result.create(replys)
+    result = Result.create(replys)
 
     speedtest = %{speedtest | result: result}
 
