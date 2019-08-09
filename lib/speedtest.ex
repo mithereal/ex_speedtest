@@ -24,6 +24,8 @@ defmodule Speedtest do
    to servers matching those specified in the servers argument
   """
   def fetch_servers(%Speedtest{} = speedtest \\ %Speedtest{}) do
+    Logger.info("Retrieving speedtest.net server list...")
+
     urls = [
       "https://www.speedtest.net/speedtest-servers-static.php",
       "http://c.speedtest.net/speedtest-servers-static.php",
@@ -68,6 +70,8 @@ defmodule Speedtest do
   server has the lowest latency
   """
   def choose_best_server(servers) do
+    Logger.info("Selecting best server based on ping...")
+
     reply =
       Enum.map(servers, fn s ->
         url = Decoder.url(s.host)
@@ -86,6 +90,7 @@ defmodule Speedtest do
   by the speedtest.net configuration
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
+    Logger.info("Testing download speed...")
     {_, urls} = generate_download_urls(speedtest)
 
     responses =
@@ -118,6 +123,7 @@ defmodule Speedtest do
   by the speedtest.net configuration
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
+    Logger.info("Testing Upload Speed...")
     {_, data} = generate_upload_data(speedtest)
 
     responses =
@@ -165,6 +171,8 @@ defmodule Speedtest do
 
     config = Decoder.config(result)
 
+    Logger.info("Testing from " <> config.client.isp <> " (" <> config.client.ip <> ")...")
+
     {_, result} = fetch_servers(init)
 
     speedtest = %{result | config: config}
@@ -175,6 +183,22 @@ defmodule Speedtest do
 
     selected_server = choose_best_server(closest_servers)
 
+    {_, _, ping} = selected_server.ping
+
+    ping = to_string(ping)
+
+    elapsed_time = ping <> " ms"
+
+    Logger.info(
+      "Hosted by " <>
+        selected_server.sponsor <>
+        " (" <>
+        selected_server.name <>
+        ") " <>
+        "[" <>
+        to_string(Float.round(selected_server.distance / 1000)) <> " km]: " <> elapsed_time
+    )
+
     speedtest = %{result | selected_server: selected_server}
 
     {_, download_reply} = download(speedtest)
@@ -183,7 +207,13 @@ defmodule Speedtest do
 
     replys = {upload_reply, download_reply}
 
-    reply = Result.create(speedtest, replys)
+    {_, reply} = Result.create(speedtest, replys)
+
+    speed = to_string(Float.round(reply.result.download, 2)) <> " Mbit/s"
+    Logger.info("Download: " <> speed)
+
+    speed = to_string(Float.round(reply.result.upload, 2)) <> " Mbit/s"
+    Logger.info("Upload: " <> speed)
 
     {:ok, reply}
   end
@@ -202,6 +232,8 @@ defmodule Speedtest do
   end
 
   def fetch_config_data() do
+    Logger.info("Retrieving speedtest.net configuration...")
+
     {status, response} =
       HTTPoison.get(
         "https://www.speedtest.net/speedtest-config.php",

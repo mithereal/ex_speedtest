@@ -3,7 +3,7 @@ defmodule Speedtest.Result do
 
   alias Speedtest.Result
 
-  @key "297aae72"
+  @default_key "297aae72"
 
   defstruct download: nil,
             upload: nil,
@@ -11,7 +11,7 @@ defmodule Speedtest.Result do
             server: nil,
             client: nil,
             timestamp: nil,
-            bytes_recieved: 0,
+            bytes_received: 0,
             bytes_sent: 0,
             share: nil
 
@@ -48,19 +48,19 @@ defmodule Speedtest.Result do
 
     download_size_total = Enum.sum(download_sizes)
 
-    download = download_total / download_time * 8.0
+    download = download_size_total / download_time * 8.0
 
-    upload = upload_total / upload_time * 8.0
+    upload = upload_size_total / upload_time * 8.0
 
     result = %Result{
       download: download,
       upload: upload,
       ping: speedtest.selected_server.ping,
       server: speedtest.selected_server,
-      client: speedtest.client,
+      client: speedtest.config.client,
       timestamp: DateTime.utc_now(),
-      bytes_recieved: download_total,
-      bytes_sent: upload_total,
+      bytes_received: download_size_total,
+      bytes_sent: upload_size_total,
       share: nil
     }
 
@@ -70,16 +70,29 @@ defmodule Speedtest.Result do
   end
 
   def share(%Result{} = result) do
+    config_key = Application.get_env(:speedtest, :key)
+
+    key =
+      case config_key do
+        nil ->
+          @default_key
+
+        _ ->
+          config_key
+      end
+
+    {_, _, ping} = result.ping
+
     hash =
       :crypto.hash(
         :md5,
-        to_string(result.ping) <>
-          "-" <> to_string(result.upload) <> "-" <> to_string(result.download) <> "-" <> @key
+        to_string(ping) <>
+          "-" <> to_string(result.upload) <> "-" <> to_string(result.download) <> "-" <> key
       )
       |> Base.encode16()
 
     download = round(result.download / 1000.0)
-    ping = round(result.ping)
+    ping = round(ping)
     upload = round(result.upload / 1000.0)
 
     api_data = [
@@ -105,9 +118,11 @@ defmodule Speedtest.Result do
     body = Enum.join(api_data, "&")
     {_, response} = HTTPoison.post(url, body, headers)
 
-    image = "response.body.resultid"
+    res = Regex.run(~r{resultid=(.)}, response.body)
 
-    share = "http://www.speedtest.net/result/" <> image <> "/png"
+    image = List.last(res)
+
+    share = "http://www.speedtest.net/result/" <> image <> ".png"
 
     %{result | share: share}
   end

@@ -10,7 +10,8 @@ use Mix.Config
 
 # You can configure your application as:
 # key is the ipstack.com access key
-config :speedtest, threads: nil
+# config :speedtest, key: nil
+# config :speedtest, threads: nil
 # config :speedtest, include: nil
 # config :speedtest, exclude: nil
 # and access this configuration in your application as:

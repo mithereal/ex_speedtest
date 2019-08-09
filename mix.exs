@@ -12,7 +12,7 @@ defmodule Speedtest.MixProject do
       package: package(),
       deps: deps(),
       name: "Speedtest",
-      source_url: "https://github.com/elixir-ecto/postgrex"
+      source_url: "https://github.com/mithereal/speedtest.git"
     ]
   end
 
@@ -36,7 +36,7 @@ defmodule Speedtest.MixProject do
   end
 
   defp description() do
-    "A Speedtest Client for Elixir"
+    "A Speedtest.net Client for Elixir"
   end
 
   defp package() do
