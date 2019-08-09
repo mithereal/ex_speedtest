@@ -83,9 +83,28 @@ defmodule Speedtest do
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
     {_, urls} = generate_download_urls(speedtest)
 
-    IO.inspect urls
-    data = []
-    {:ok, data}
+    responses =
+      Enum.map(urls, fn u ->
+        {time_in_microseconds, return} =
+          :timer.tc(fn ->
+            {_, reply} = HTTPoison.get(u)
+            reply
+          end)
+
+        [{_, length}] =
+          Enum.filter(return.headers, fn h ->
+            {key, _} = h
+            key == "Content-Length"
+          end)
+
+        %{elapsed_time: time_in_microseconds, bytes: String.to_integer(length), url: u}
+      end)
+
+    {:ok, responses}
+  end
+
+  def calculate(data) do
+    data.bytes / (1 / :math.pow(10, 3)) * data.elapsed_time 
   end
 
   @doc """
@@ -105,7 +124,12 @@ defmodule Speedtest do
   def distance(%Speedtest{} = speedtest \\ %Speedtest{}) do
     servers =
       Enum.map(speedtest.servers, fn s ->
-        distance = Geocalc.distance_between([speedtest.config.client.lat, speedtest.config.client.lon], [s.lat, s.lon])
+        distance =
+          Geocalc.distance_between([speedtest.config.client.lat, speedtest.config.client.lon], [
+            s.lat,
+            s.lon
+          ])
+
         Map.put(s, :distance, distance)
       end)
 
@@ -134,6 +158,11 @@ defmodule Speedtest do
     selected_server = choose_best_server(closest_servers)
 
     speedtest = %{result | selected_server: selected_server}
+
+    # download_reply = download(speedtest)
+    # upload_reply = upload(speedtest)
+    # data = {upload_reply, download_reply}
+    # result = Result.create(reply)
 
     {:ok, speedtest}
   end
@@ -171,16 +200,15 @@ defmodule Speedtest do
     {:ok, reply}
   end
 
-  def generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do 
+  def generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do
+    urls =
+      Enum.map(speedtest.config.sizes.download, fn s ->
+        size = to_string(s)
+        speedtest.selected_server.host <> "/speedtest/random" <> size <> "x" <> size <> ".jpg"
+      end)
 
-    urls = Enum.map(speedtest.config.sizes.download, fn(s) -> 
-      size = to_string(s)
-      speedtest.selected_server.host <> "/speedtest/random" <> size <> "x" <> size <> ".jpg"
-    end)
+    urls = Enum.shuffle(urls)
 
-   urls =  Enum.shuffle(urls) 
-
-   {:ok, urls}
+    {:ok, urls}
   end
-
 end

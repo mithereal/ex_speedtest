@@ -53,20 +53,20 @@ defmodule Speedtest.Decoder do
         id: ~x"./@id",
         host: ~x"./@host"
       )
-Enum.map(results, fn(result) -> 
-  %{
-    url: to_string(result.url),
-    lat: to_float(result.lat),
-    lon: to_float(result.lon),
-    name: to_string(result.name),
-    country: to_string(result.country),
-    cc: to_string(result.cc),
-    sponsor: to_string(result.sponsor),
-    id: to_string(result.id),
-    host: to_string(result.host)
-  }
-end)
-    
+
+    Enum.map(results, fn result ->
+      %{
+        url: to_string(result.url),
+        lat: to_float(result.lat),
+        lon: to_float(result.lon),
+        name: to_string(result.name),
+        country: to_string(result.country),
+        cc: to_string(result.cc),
+        sponsor: to_string(result.sponsor),
+        id: to_string(result.id),
+        host: to_string(result.host)
+      }
+    end)
   end
 
   def server_config(data) do
@@ -118,7 +118,6 @@ end)
     threads = %{upload: upload.threads, download: server_config.threadcount * 2}
 
     length = %{upload: upload.testlength, download: download.testlength}
-    
 
     reply = %{
       client: client,
@@ -132,7 +131,6 @@ end)
 
     reply
   end
-
 
   def to_integer(data) do
     data = to_string(data)
