@@ -222,16 +222,16 @@ defmodule Speedtest do
     Ping.ping(ip)
   end
 
-  def user_agent() do
+  defp user_agent() do
     {"User-Agent",
      "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36"}
   end
 
-  def fetch_server(server) do
+  defp fetch_server(server) do
     HTTPoison.get(server, [user_agent()], hackney: [headers: [user_agent()]])
   end
 
-  def fetch_config_data() do
+  defp fetch_config_data() do
     Logger.info("Retrieving speedtest.net configuration...")
 
     {status, response} =
@@ -244,6 +244,9 @@ defmodule Speedtest do
     {status, response}
   end
 
+  @doc """
+  Setup the base speedtest
+  """
   def init() do
     threads = Application.get_env(:speedtest, :threads)
     include = Application.get_env(:speedtest, :include)
@@ -253,7 +256,7 @@ defmodule Speedtest do
     {:ok, reply}
   end
 
-  def generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do
+  defp generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do
     urls =
       Enum.map(speedtest.config.sizes.download, fn s ->
         size = to_string(s)
@@ -265,7 +268,7 @@ defmodule Speedtest do
     {:ok, urls}
   end
 
-  def generate_upload_data(%Speedtest{} = speedtest \\ %Speedtest{}) do
+  defp generate_upload_data(%Speedtest{} = speedtest \\ %Speedtest{}) do
     data =
       Enum.map(speedtest.config.sizes.upload, fn s ->
         {speedtest.selected_server.url, to_string(s)}
