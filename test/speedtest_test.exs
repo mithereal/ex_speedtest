@@ -6,4 +6,9 @@ defmodule SpeedtestTest do
     {status, _} = Speedtest.fetch_servers()
     assert status == :ok
   end
+
+  test "Run the Speedtest" do
+    {status, _} = Speedtest.run()
+    assert status == :ok
+  end
 end

@@ -22,6 +22,11 @@ defmodule Speedtest do
   @doc """
   Retrieve a the list of speedtest.net servers, optionally filtered
    to servers matching those specified in the servers argument
+
+  example:
+
+    Speedtest.fetch_servers(%Speedtest{})
+
   """
   def fetch_servers(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Retrieving speedtest.net server list...")
@@ -58,6 +63,11 @@ defmodule Speedtest do
   @doc """
   Limit servers to the closest speedtest.net servers based on
   geographic distance
+
+  example:
+
+    Speedtest.choose_closest_servers()
+      
   """
   def choose_closest_servers(servers \\ [], amount \\ 2) do
     servers = Enum.sort_by(servers, fn s -> s.distance end)
@@ -68,6 +78,11 @@ defmodule Speedtest do
   @doc """
   Perform a speedtest.net "ping" to determine which speedtest.net
   server has the lowest latency
+
+  example:
+
+    Speedtest.choose_best_server([]})
+      
   """
   def choose_best_server(servers) do
     Logger.info("Selecting best server based on ping...")
@@ -86,6 +101,11 @@ defmodule Speedtest do
 
   @doc """
   Test download speed against speedtest.net
+
+   example:
+
+    Speedtest.download(%Speedtest{})
+
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Testing download speed...")
@@ -111,12 +131,13 @@ defmodule Speedtest do
     {:ok, responses}
   end
 
-  defp calculate(data) do
-    data.bytes / (1 / :math.pow(10, 3)) * data.elapsed_time
-  end
-
   @doc """
   Test upload speed against speedtest.net
+
+  example:
+
+    Speedtest.upload(%Speedtest{})
+
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Testing Upload Speed...")
@@ -140,6 +161,11 @@ defmodule Speedtest do
 
   @doc """
   Determine distance between sets of [lat,lon] in km 
+
+  example:
+
+    Speedtest.distance(%Speedtest{})
+
   """
   def distance(%Speedtest{} = speedtest \\ %Speedtest{}) do
     servers =
@@ -159,6 +185,11 @@ defmodule Speedtest do
 
   @doc """
   Run the full speedtest.net test
+
+  example:
+
+    Speedtest.run()
+
   """
   def run() do
     {_, init} = init()
@@ -216,35 +247,25 @@ defmodule Speedtest do
 
   @doc """
   Ping an IP and return a tuple with the time
+
+  example:
+
+    Speedtest.ping("127.0.0.1")
+
   """
   def ping(ip) do
     Ping.ping(ip)
   end
 
-  defp user_agent() do
-    {"User-Agent",
-     "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36"}
-  end
-
-  defp fetch_server(server) do
-    HTTPoison.get(server, [user_agent()], hackney: [headers: [user_agent()]])
-  end
-
-  defp fetch_config_data() do
-    Logger.info("Retrieving speedtest.net configuration...")
-
-    {status, response} =
-      HTTPoison.get(
-        "https://www.speedtest.net/speedtest-config.php",
-        [user_agent()],
-        hackney: [headers: [user_agent()]]
-      )
-
-    {status, response}
-  end
-
   @doc """
   Setup the base speedtest
+
+  ## Examples
+
+      iex> Speedtest.init()
+      {:ok, %Speedtest{config: [],exclude: nil,include: nil,result: nil,selected_server: nil,servers: [],threads: nil}}
+
+
   """
   def init() do
     threads = Application.get_env(:speedtest, :threads)
@@ -274,5 +295,27 @@ defmodule Speedtest do
       end)
 
     {:ok, data}
+  end
+
+  defp user_agent() do
+    {"User-Agent",
+     "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36"}
+  end
+
+  defp fetch_server(server) do
+    HTTPoison.get(server, [user_agent()], hackney: [headers: [user_agent()]])
+  end
+
+  defp fetch_config_data() do
+    Logger.info("Retrieving speedtest.net configuration...")
+
+    {status, response} =
+      HTTPoison.get(
+        "https://www.speedtest.net/speedtest-config.php",
+        [user_agent()],
+        hackney: [headers: [user_agent()]]
+      )
+
+    {status, response}
   end
 end
