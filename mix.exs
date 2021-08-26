@@ -4,7 +4,7 @@ defmodule Speedtest.MixProject do
   def project do
     [
       app: :speedtest,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.8",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -28,10 +28,10 @@ defmodule Speedtest.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
-      {:httpoison, "~> 1.5"},
-      {:sweet_xml, "~> 0.6.6"},
-      {:geocalc, "~> 0.5"},
+      {:ex_doc, "~> 0.25", only: :dev, runtime: false},
+      {:httpoison, "~> 1.8"},
+      {:sweet_xml, "~> 0.6"},
+      {:geocalc, "~> 0.8"},
       {:inch_ex, ">= 0.0.0", only: [:test, :dev]},
       {:mix_test_watch, "~> 0.8", only: :dev, runtime: false}
     ]
