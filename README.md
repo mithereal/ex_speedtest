@@ -25,9 +25,9 @@ iex> Speedtest.run()
 ```elixir
 config :speedtest,
  key: "xxx",
-threads: nil,
+ threads: nil,
  include: nil,
-exclude: nil
+ exclude: nil
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
