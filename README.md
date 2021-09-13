@@ -10,14 +10,13 @@ by adding `speedtest` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:speedtest, "~> 0.1.1"}
+    {:speedtest, "~> 1.0.0"}
   ]
 end
 ```
 
-[![Build Status](https://travis-ci.org/mithereal/speedtest.svg?branch=master)](https://travis-ci.org/mithereal/speedtest)
+[![Build Status](https://circleci.com/gh/mithereal/ex_speedtest.svg?style=svg)](https://github.com/mithereal/ex_speedtest)
 
-[![Inline docs](http://inch-ci.org/github/mithereal/speedtest.svg)](http://inch-ci.org/github/mithereal/speedtest)
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can

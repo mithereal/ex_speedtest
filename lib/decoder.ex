@@ -3,6 +3,8 @@ defmodule Speedtest.Decoder do
 
   @moduledoc false
 
+  ## in bytes
+
   @download_sizes [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
   @upload_sizes [32768, 65536, 131_072, 262_144, 524_288, 1_048_576, 7_340_032]
 

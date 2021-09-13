@@ -38,6 +38,7 @@ defmodule Speedtest.Result do
         to_integer(x.bytes)
       end)
 
+
     upload_time = Enum.sum(upload_times)
 
     upload_sizes =
@@ -45,29 +46,47 @@ defmodule Speedtest.Result do
         to_integer(x.bytes)
       end)
 
-    upload_avg = upload_time / Enum.count(upload_reply)
+    upload_size_total_bytes = Enum.sum(upload_sizes)
 
-    upload_size_total = Enum.sum(upload_sizes)
+        upload_size_total_mb = (upload_size_total_bytes / 1024) / 1024
 
     download_time = Enum.sum(download_times)
 
-    download_avg = download_time / Enum.count(download_reply)
+    download_size_total_bytes = Enum.sum(download_sizes)
 
-    download_size_total = Enum.sum(download_sizes)
+    download_size_total_mb = (download_size_total_bytes / 1024) / 1024
 
-    download = download_size_total / download_time * 8.0
+    download_size_total_mb = download_size_total_mb * 8.0
 
-    upload = upload_size_total / upload_time * 8.0
+     download_time_in_sec = download_time / 1_000_000
+
+    upload_time_in_sec = upload_time / 1_000_000
+
+    download =  download_size_total_mb / download_time_in_sec
+
+    upload =  upload_size_total_mb / upload_time_in_sec
+
+        upload_avg_sec = upload_time_in_sec / Enum.count(upload_reply)
+        upload_avg_sec = upload_avg_sec *  Enum.count(upload_reply)
+        upload_avg_sec = upload_size_total_mb / upload_avg_sec
+
+            download_avg_sec = download_time_in_sec / Enum.count(download_reply)
+            download_avg_sec = download_avg_sec *  Enum.count(download_reply)
+            download_avg_sec = download_size_total_mb / download_avg_sec
+
+
+    client  = %{speedtest.config.client | ispdlavg: download_avg_sec}
+    client  = %{client | ispulavg: upload_avg_sec}
 
     result = %Result{
       download: download,
       upload: upload,
       ping: speedtest.selected_server.ping,
       server: speedtest.selected_server,
-      client: speedtest.config.client,
+      client: client,
       timestamp: DateTime.utc_now(),
-      bytes_received: download_size_total,
-      bytes_sent: upload_size_total,
+      bytes_received: download_size_total_bytes,
+      bytes_sent: upload_size_total_bytes,
       share: nil
     }
 

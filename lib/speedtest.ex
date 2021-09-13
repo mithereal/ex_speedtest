@@ -242,6 +242,14 @@ defmodule Speedtest do
     speed = to_string(Float.round(reply.result.upload, 2)) <> " Mbit/s"
     Logger.info("Upload: " <> speed)
 
+    config = reply.config
+
+    client = reply.result.client
+
+    config = %{config | client: client}
+
+     reply = %{reply | config: config}
+
     {:ok, reply}
   end
 
