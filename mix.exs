@@ -2,7 +2,7 @@ defmodule Speedtest.MixProject do
   use Mix.Project
 
   @version "1.0.0"
-    @source_url "https://github.com/mithereal/ex_speedtest.git"
+  @source_url "https://github.com/mithereal/ex_speedtest.git"
 
   def project do
     [
@@ -55,7 +55,6 @@ defmodule Speedtest.MixProject do
       links: %{"GitHub" => "https://github.com/mithereal/ex_speedtest"}
     ]
   end
-
 
   defp docs() do
     [

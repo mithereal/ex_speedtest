@@ -248,7 +248,7 @@ defmodule Speedtest do
 
     config = %{config | client: client}
 
-     reply = %{reply | config: config}
+    reply = %{reply | config: config}
 
     {:ok, reply}
   end

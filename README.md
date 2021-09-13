@@ -15,6 +15,20 @@ def deps do
 end
 ```
 
+## Usage
+
+```elixir
+iex> Speedtest.run()
+```
+
+## Configuration (optional)
+```elixir
+config :speedtest,
+ key: "xxx",
+threads: nil,
+ include: nil,
+exclude: nil
+```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can

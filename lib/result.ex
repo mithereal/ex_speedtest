@@ -38,7 +38,6 @@ defmodule Speedtest.Result do
         to_integer(x.bytes)
       end)
 
-
     upload_time = Enum.sum(upload_times)
 
     upload_sizes =
@@ -48,35 +47,34 @@ defmodule Speedtest.Result do
 
     upload_size_total_bytes = Enum.sum(upload_sizes)
 
-        upload_size_total_mb = (upload_size_total_bytes / 1024) / 1024
+    upload_size_total_mb = upload_size_total_bytes / 1024 / 1024
 
     download_time = Enum.sum(download_times)
 
     download_size_total_bytes = Enum.sum(download_sizes)
 
-    download_size_total_mb = (download_size_total_bytes / 1024) / 1024
+    download_size_total_mb = download_size_total_bytes / 1024 / 1024
 
     download_size_total_mb = download_size_total_mb * 8.0
 
-     download_time_in_sec = download_time / 1_000_000
+    download_time_in_sec = download_time / 1_000_000
 
     upload_time_in_sec = upload_time / 1_000_000
 
-    download =  download_size_total_mb / download_time_in_sec
+    download = download_size_total_mb / download_time_in_sec
 
-    upload =  upload_size_total_mb / upload_time_in_sec
+    upload = upload_size_total_mb / upload_time_in_sec
 
-        upload_avg_sec = upload_time_in_sec / Enum.count(upload_reply)
-        upload_avg_sec = upload_avg_sec *  Enum.count(upload_reply)
-        upload_avg_sec = upload_size_total_mb / upload_avg_sec
+    upload_avg_sec = upload_time_in_sec / Enum.count(upload_reply)
+    upload_avg_sec = upload_avg_sec * Enum.count(upload_reply)
+    upload_avg_sec = upload_size_total_mb / upload_avg_sec
 
-            download_avg_sec = download_time_in_sec / Enum.count(download_reply)
-            download_avg_sec = download_avg_sec *  Enum.count(download_reply)
-            download_avg_sec = download_size_total_mb / download_avg_sec
+    download_avg_sec = download_time_in_sec / Enum.count(download_reply)
+    download_avg_sec = download_avg_sec * Enum.count(download_reply)
+    download_avg_sec = download_size_total_mb / download_avg_sec
 
-
-    client  = %{speedtest.config.client | ispdlavg: download_avg_sec}
-    client  = %{client | ispulavg: upload_avg_sec}
+    client = %{speedtest.config.client | ispdlavg: download_avg_sec}
+    client = %{client | ispulavg: upload_avg_sec}
 
     result = %Result{
       download: download,
