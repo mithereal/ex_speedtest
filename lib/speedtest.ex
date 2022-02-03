@@ -145,7 +145,7 @@ defmodule Speedtest do
 
     responses =
       Enum.map(data, fn {url, size} ->
-        {time_in_microseconds, return} =
+        {time_in_microseconds, _return} =
           :timer.tc(fn ->
             headers = [{"Content-length", size}]
             body = ""
@@ -181,6 +181,36 @@ defmodule Speedtest do
 
     speedtest = %{speedtest | servers: servers}
     {:ok, speedtest}
+  end
+
+  def measure_upload() do
+    try do
+      {:ok, init} = init()
+
+      {:ok, result} = fetch_config_data()
+
+      config = Decoder.config(result)
+
+      {:ok, result} = fetch_servers(init)
+
+      speedtest = %{result | config: config}
+
+      {:ok, result} = distance(speedtest)
+
+      closest_servers = choose_closest_servers(result.servers)
+
+      selected_server = choose_best_server(closest_servers)
+
+      speedtest = %{result | selected_server: selected_server}
+
+      {:ok, upload_reply} = upload(speedtest)
+
+      upload = Result.get_upload_result(upload_reply)
+
+      {:ok, upload}
+    rescue
+      e -> {:error, e}
+    end
   end
 
   @doc """
@@ -284,7 +314,7 @@ defmodule Speedtest do
     {:ok, reply}
   end
 
-  defp generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do
+  defp generate_download_urls(%Speedtest{} = speedtest) do
     urls =
       Enum.map(speedtest.config.sizes.download, fn s ->
         size = to_string(s)
@@ -296,7 +326,7 @@ defmodule Speedtest do
     {:ok, urls}
   end
 
-  defp generate_upload_data(%Speedtest{} = speedtest \\ %Speedtest{}) do
+  defp generate_upload_data(%Speedtest{} = speedtest) do
     data =
       Enum.map(speedtest.config.sizes.upload, fn s ->
         {speedtest.selected_server.url, to_string(s)}

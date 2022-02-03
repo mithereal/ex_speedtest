@@ -93,6 +93,18 @@ defmodule Speedtest.Result do
     {:ok, reply}
   end
 
+  def get_upload_result(upload) do
+    upload_times = Enum.map(upload, & &1.elapsed_time)
+    upload_sizes = Enum.map(upload, &to_integer(&1.bytes))
+    upload_time = Enum.sum(upload_times)
+    upload_size_total_bytes = Enum.sum(upload_sizes)
+    upload_size_total_mb = upload_size_total_bytes / 1024 / 1024
+    upload_time_in_sec = upload_time / 1_000_000
+    upload = upload_size_total_mb / upload_time_in_sec
+
+    upload
+  end
+
   @doc """
   Share the results with speedtest.net
   """
