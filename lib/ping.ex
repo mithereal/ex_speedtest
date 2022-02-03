@@ -10,18 +10,15 @@ defmodule Speedtest.Ping do
   `{:ok, ip, time}` 
   """
   def ping(ip) do
-    try do
-      {cmd_output, _} = System.cmd("ping", ["-c", "5", "-w", "5", "-s", "1", ip])
-      [_ | time] = Regex.run(~r/time(.*?ms)/, cmd_output)
-      [time] = time
-      time = String.split(time, "m")
-      time = List.first(time)
-      time = String.trim(time)
-      time = String.to_integer(time)
+    {cmd_output, _} = System.cmd("ping", ["-c", "1", ip])
+    [_ | [time]] = Regex.run(~r/time=(.*? ms)/, cmd_output)
 
-      {:ok, ip, time}
-    rescue
-      e -> {:error, ip, e}
-    end
+    {time, ""} =
+      time
+      |> String.split(" ")
+      |> List.first()
+      |> Float.parse()
+
+    time
   end
 end
