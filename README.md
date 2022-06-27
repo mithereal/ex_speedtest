@@ -1,5 +1,12 @@
 # Speedtest
 
+
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/speedtest/)
+[![Hex.pm](https://img.shields.io/hexpm/dt/speedtest.svg)](https://hex.pm/packages/speedtest)
+[![License](https://img.shields.io/hexpm/l/speedtest.svg)](https://github.com/mithereal/ex_gasoline_price/blob/master/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/mithereal/ex_speedtest.svg)](https://github.com/mithereal/ex_speedtest/commits/master)
+[![Build Status](https://circleci.com/gh/mithereal/ex_speedtest.svg?style=svg)](https://github.com/mithereal/ex_speedtest)
+
 **Elixir module for testing internet bandwidth using speedtest.net**
 
 ## Installation
