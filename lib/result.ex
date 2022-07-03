@@ -37,7 +37,7 @@ defmodule Speedtest.Result do
 
     upload_size_total_bits = Enum.sum(upload_sizes)
     upload_bps = upload_size_total_bits / upload_time_in_sec
-    upload = upload_bps * 0.000008 /100
+    upload = upload_bps * 0.000008 / 100
 
     download_times =
       Enum.map(download_reply, fn x ->

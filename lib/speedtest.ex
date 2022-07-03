@@ -125,7 +125,7 @@ defmodule Speedtest do
             key == "Content-Length"
           end)
 
-          time_in_seconds = time_in_microseconds / 1_000_000
+        time_in_seconds = time_in_microseconds / 1_000_000
 
         %{elapsed_time: time_in_seconds, bytes: String.to_integer(length), url: u}
       end)
