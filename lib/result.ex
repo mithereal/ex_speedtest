@@ -25,19 +25,24 @@ defmodule Speedtest.Result do
   def create(speedtest, {upload_reply, download_reply}) do
     upload_times =
       Enum.map(upload_reply, fn x ->
-        x.elapsed_time
+        x.elapsed_time * 10
       end)
-
-    upload_time_in_sec = Enum.sum(upload_times)
 
     upload_sizes =
       Enum.map(upload_reply, fn x ->
         to_integer(x.bytes)
       end)
 
-    upload_size_total_bits = Enum.sum(upload_sizes)
-    upload_bps = upload_size_total_bits / upload_time_in_sec
-    upload = upload_bps * 0.000008 / 100
+    upload_total_time_in_sec = Enum.sum(upload_times)
+
+    upload_size_total_bytes = Enum.sum(upload_sizes)
+    upload_size_total_mb = upload_size_total_bytes / 1_000_000
+
+    upload =  upload_size_total_mb / upload_total_time_in_sec
+
+    upload_avg_sec = upload_total_time_in_sec / Enum.count(upload_reply)
+    upload_avg_sec = upload_avg_sec * Enum.count(upload_reply)
+    upload_avg_sec = upload_size_total_bytes / upload_avg_sec
 
     download_times =
       Enum.map(download_reply, fn x ->
@@ -50,23 +55,17 @@ defmodule Speedtest.Result do
       end)
 
     download_time_in_sec = Enum.sum(download_times)
-    download_size_total_bits = Enum.sum(download_sizes)
-    download_bps = download_size_total_bits / download_time_in_sec
-    download = download_bps * 0.000008
+    download_size_total_bytes = Enum.sum(download_sizes)
+    download_bps = download_size_total_bytes / download_time_in_sec
 
-    upload_avg_sec = upload_time_in_sec / Enum.count(upload_reply)
-    upload_avg_sec = upload_avg_sec * Enum.count(upload_reply)
-    upload_avg_sec = upload_size_total_bits / upload_avg_sec
+    download = download_bps / 131_072
 
     download_avg_sec = download_time_in_sec / Enum.count(download_reply)
     download_avg_sec = download_avg_sec * Enum.count(download_reply)
-    download_avg_sec = download_size_total_bits / download_avg_sec
+    download_avg_sec = download_size_total_bytes / download_avg_sec
 
     client = %{speedtest.config.client | ispdlavg: download_avg_sec}
     client = %{client | ispulavg: upload_avg_sec}
-
-    download_size_total_bytes = download_size_total_bits / 8
-    upload_size_total_bytes = upload_size_total_bits / 8
 
     result = %Result{
       download: download,
