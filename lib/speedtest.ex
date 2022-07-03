@@ -125,7 +125,9 @@ defmodule Speedtest do
             key == "Content-Length"
           end)
 
-        %{elapsed_time: time_in_microseconds, bytes: String.to_integer(length), url: u}
+          time_in_seconds = time_in_microseconds / 1_000_000
+
+        %{elapsed_time: time_in_seconds, bytes: String.to_integer(length), url: u}
       end)
 
     {:ok, responses}
@@ -153,7 +155,9 @@ defmodule Speedtest do
             reply
           end)
 
-        %{elapsed_time: time_in_microseconds, bytes: size, url: url}
+        time_in_seconds = time_in_microseconds / 1_000_000
+
+        %{elapsed_time: time_in_seconds, bytes: size, url: url}
       end)
 
     {:ok, responses}
