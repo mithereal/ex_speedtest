@@ -147,18 +147,15 @@ defmodule Speedtest do
 
     responses =
       Enum.map(data, fn {url, size} ->
-        start_ms = System.monotonic_time(:milliseconds)
+        event_time = System.monotonic_time(:millisecond)
 
         headers = [{"Content-length", size}]
         body = ""
         {_, reply} = HTTPoison.post(url, body, headers)
-        reply
 
-        end_ms = System.monotonic_time(:milliseconds)
-        diff = end_ms - start_ms
+        time_in_milliseconds = System.monotonic_time(:millisecond) - event_time
 
-        time_in_seconds = diff / 1_000
-        %{elapsed_time: time_in_seconds, bytes: size, url: url}
+        %{elapsed_time: time_in_milliseconds / 1_000, bytes: size, url: url}
       end)
 
     {:ok, responses}

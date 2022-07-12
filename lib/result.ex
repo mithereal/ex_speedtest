@@ -25,7 +25,7 @@ defmodule Speedtest.Result do
   def create(speedtest, {upload_reply, download_reply}) do
     upload_times =
       Enum.map(upload_reply, fn x ->
-        x.elapsed_time * 10
+        x.elapsed_time
       end)
 
     upload_sizes =
@@ -36,7 +36,7 @@ defmodule Speedtest.Result do
     upload_total_time_in_sec = Enum.sum(upload_times)
 
     upload_size_total_bytes = Enum.sum(upload_sizes)
-    upload_size_total_mb = upload_size_total_bytes / 1_000_000
+    upload_size_total_mb = upload_size_total_bytes / 125_000
 
     upload = upload_size_total_mb / upload_total_time_in_sec
 
@@ -56,9 +56,9 @@ defmodule Speedtest.Result do
     download_time_in_sec = Enum.sum(download_times)
 
     download_size_total_bytes = Enum.sum(download_sizes)
-    download_size_total_mb = download_size_total_bytes / 1_000_000
+    download_size_total_mb = download_size_total_bytes / 125_000
 
-    download = 16 * download_size_total_mb / download_time_in_sec
+    download = download_size_total_mb / download_time_in_sec
 
     download_avg_sec = download_time_in_sec / Enum.count(download_reply)
     download_avg_sec = download_size_total_bytes / download_avg_sec
