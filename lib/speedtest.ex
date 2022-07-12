@@ -147,16 +147,17 @@ defmodule Speedtest do
 
     responses =
       Enum.map(data, fn {url, size} ->
-        {time_in_microseconds, return} =
-          :timer.tc(fn ->
-            headers = [{"Content-length", size}]
-            body = ""
-            {_, reply} = HTTPoison.post(url, body, headers)
-            reply
-          end)
+        start_ms = System.monotonic_time(:milliseconds)
 
-        time_in_seconds = time_in_microseconds / 1_000_000
+        headers = [{"Content-length", size}]
+        body = ""
+        {_, reply} = HTTPoison.post(url, body, headers)
+        reply
 
+        end_ms = System.monotonic_time(:milliseconds)
+        diff = end_ms - start_ms
+
+        time_in_seconds = diff / 1_000
         %{elapsed_time: time_in_seconds, bytes: size, url: url}
       end)
 
@@ -179,6 +180,8 @@ defmodule Speedtest do
             s.lat,
             s.lon
           ])
+          |> Float.round()
+          |> trunc()
 
         Map.put(s, :distance, distance)
       end)

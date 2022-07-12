@@ -41,7 +41,6 @@ defmodule Speedtest.Result do
     upload = upload_size_total_mb / upload_total_time_in_sec
 
     upload_avg_sec = upload_total_time_in_sec / Enum.count(upload_reply)
-    upload_avg_sec = upload_avg_sec * Enum.count(upload_reply)
     upload_avg_sec = upload_size_total_bytes / upload_avg_sec
 
     download_times =
@@ -59,18 +58,17 @@ defmodule Speedtest.Result do
     download_size_total_bytes = Enum.sum(download_sizes)
     download_size_total_mb = download_size_total_bytes / 1_000_000
 
-    download = (8 * download_size_total_mb ) / download_time_in_sec
+    download = 16 * download_size_total_mb / download_time_in_sec
 
     download_avg_sec = download_time_in_sec / Enum.count(download_reply)
-    download_avg_sec = download_avg_sec * Enum.count(download_reply)
     download_avg_sec = download_size_total_bytes / download_avg_sec
 
-    client = %{speedtest.config.client | ispdlavg: download_avg_sec}
-    client = %{client | ispulavg: upload_avg_sec}
+    client = %{speedtest.config.client | ispdlavg: trunc(Float.round(download_avg_sec))}
+    client = %{client | ispulavg: trunc(Float.round(upload_avg_sec))}
 
     result = %Result{
-      download: download,
-      upload: upload,
+      download: Float.round(download, 2),
+      upload: Float.round(upload, 2),
       ping: speedtest.selected_server.ping,
       server: speedtest.selected_server,
       client: client,
