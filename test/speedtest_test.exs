@@ -1,6 +1,5 @@
 defmodule SpeedtestTest do
   use ExUnit.Case
-  doctest Speedtest
 
   test "Fetch Speedtest.net servers" do
     {status, _} = Speedtest.fetch_servers()

@@ -36,12 +36,16 @@ defmodule Speedtest.Result do
     upload_total_time_in_sec = Enum.sum(upload_times)
 
     upload_size_total_bytes = Enum.sum(upload_sizes)
-    upload_size_total_mb = upload_size_total_bytes / 125_000
 
-    upload = upload_size_total_mb / upload_total_time_in_sec
+    upload_size_total_mb = upload_size_total_bytes / 1_000_000
+
+    upload_size_total_mbit = upload_size_total_mb * 8
+
+    upload = upload_size_total_mbit / upload_total_time_in_sec
 
     upload_avg_sec = upload_total_time_in_sec / Enum.count(upload_reply)
-    upload_avg_sec = upload_size_total_bytes / upload_avg_sec
+
+    upload_bps = upload_size_total_bytes / upload_avg_sec
 
     download_times =
       Enum.map(download_reply, fn x ->
@@ -56,15 +60,19 @@ defmodule Speedtest.Result do
     download_time_in_sec = Enum.sum(download_times)
 
     download_size_total_bytes = Enum.sum(download_sizes)
-    download_size_total_mb = download_size_total_bytes / 125_000
 
-    download = download_size_total_mb / download_time_in_sec
+    download_size_total_mb = download_size_total_bytes / 1_000_000
+
+    download_size_total_mbit = download_size_total_mb * 8
+
+    download = download_size_total_mbit / download_time_in_sec
 
     download_avg_sec = download_time_in_sec / Enum.count(download_reply)
-    download_avg_sec = download_size_total_bytes / download_avg_sec
 
-    client = %{speedtest.config.client | ispdlavg: trunc(Float.round(download_avg_sec))}
-    client = %{client | ispulavg: trunc(Float.round(upload_avg_sec))}
+    download_bps = download_size_total_bytes / download_avg_sec
+
+    client = %{speedtest.config.client | ispdlavg: trunc(Float.round(download_bps))}
+    client = %{client | ispulavg: trunc(Float.round(upload_bps))}
 
     result = %Result{
       download: Float.round(download, 2),
@@ -108,9 +116,9 @@ defmodule Speedtest.Result do
       )
       |> Base.encode16()
 
-    download = round(result.download / 1000.0)
+    download = round(result.download)
     ping = round(ping)
-    upload = round(result.upload / 1000.0)
+    upload = round(result.upload)
 
     api_data = [
       "recommendedserverid=" <> to_string(result.server.id),
