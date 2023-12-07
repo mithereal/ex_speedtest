@@ -1,14 +1,14 @@
 defmodule Speedtest.MixProject do
   use Mix.Project
 
-  @version "1.1.0"
+  @version "1.1.1"
   @source_url "https://github.com/mithereal/ex_speedtest.git"
 
   def project do
     [
       app: :speedtest,
       version: @version,
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       description: description(),
@@ -30,12 +30,12 @@ defmodule Speedtest.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.25", only: :dev, runtime: false},
-      {:httpoison, "~> 1.8"},
-      {:sweet_xml, "~> 0.7"},
-      {:geocalc, "~> 0.8"},
-      {:inch_ex, ">= 0.0.0", only: [:test, :dev]},
-      {:mix_test_watch, "~> 0.8", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
+      {:httpoison, "~> 2.2"},
+      {:sweet_xml, "~> 0.7.4"},
+      {:geocalc, "~> 0.8.5"},
+      {:inch_ex, only: :docs},
+      {:mix_audit, ">= 0.0.0", only: [:dev, :test], runtime: false}
     ]
   end
 
