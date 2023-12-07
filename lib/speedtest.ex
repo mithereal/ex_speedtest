@@ -111,8 +111,8 @@ defmodule Speedtest do
 
     threads =
       case is_nil(speedtest.threads) do
-        true -> 1
-        false -> String.to_integer(speedtest.threads)
+        true -> speedtest.config.threads.download
+        false -> speedtest.threads
       end
 
     urls = Enum.chunk_every(urls, threads)
@@ -177,8 +177,8 @@ defmodule Speedtest do
 
     threads =
       case is_nil(speedtest.threads) do
-        true -> 1
-        false -> String.to_integer(speedtest.threads)
+        true -> speedtest.config.threads.upload
+        false -> speedtest.threads
       end
 
     data = Enum.chunk_every(data, threads)
