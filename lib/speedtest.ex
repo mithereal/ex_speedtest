@@ -11,6 +11,8 @@ defmodule Speedtest do
 
   require Logger
 
+  @ttl 25000
+
   defstruct config: [],
             servers: [],
             include: nil,
@@ -23,9 +25,9 @@ defmodule Speedtest do
   Retrieve a the list of speedtest.net servers, optionally filtered
    to servers matching those specified in the servers argument
 
-  example:
+    ## Examples
 
-    Speedtest.fetch_servers(%Speedtest{})
+       iex> Speedtest.fetch_servers(%Speedtest{})
 
   """
   def fetch_servers(%Speedtest{} = speedtest \\ %Speedtest{}) do
@@ -64,99 +66,131 @@ defmodule Speedtest do
   Limit servers to the closest speedtest.net servers based on
   geographic distance
 
-  example:
+    ## Examples
 
-    Speedtest.choose_closest_servers()
+       iex> Speedtest.choose_closest_servers()
       
   """
   def choose_closest_servers(servers \\ [], amount \\ 2) do
-    servers = Enum.sort_by(servers, fn s -> s.distance end)
-    reply = Enum.take(servers, amount)
-    reply
+    Enum.sort_by(servers, fn s -> s.distance end)
+    |> Enum.take(amount)
   end
 
   @doc """
   Perform a speedtest.net "ping" to determine which speedtest.net
   server has the lowest latency
 
-  example:
+    ## Examples
 
-    Speedtest.choose_best_server([]})
+      iex> Speedtest.choose_best_server([])
       
   """
   def choose_best_server(servers) do
     Logger.info("Selecting best server based on ping...")
 
-    reply =
-      Enum.map(servers, fn s ->
-        url = Decoder.url(s.host)
-        ping = Speedtest.Ping.ping(url)
-        Map.put(s, :ping, ping)
-      end)
-
-    servers = Enum.sort_by(reply, fn s -> s.ping end)
-
-    List.first(servers)
+    Enum.map(servers, fn s ->
+      url = Decoder.url(s.host)
+      ping = Speedtest.Ping.ping(url)
+      Map.put(s, :ping, ping)
+    end)
+    |> Enum.sort_by(fn s -> s.ping end)
+    |> List.first(servers)
   end
 
   @doc """
   Test download speed against speedtest.net
 
-   example:
+  ## Examples
 
-    Speedtest.download(%Speedtest{})
+    iex> Speedtest.download(%Speedtest{})
 
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Testing download speed...")
     {_, urls} = generate_download_urls(speedtest)
 
+    threads =
+      case is_nil(speedtest.threads) do
+        true -> 1
+        false -> String.to_integer(speedtest.threads)
+      end
+
+    urls = Enum.chunk_every(urls, threads)
+
     responses =
-      Enum.map(urls, fn u ->
-        {time_in_microseconds, return} =
-          :timer.tc(fn ->
-            {_, reply} = HTTPoison.get(u)
-            reply
-          end)
-
-        [{_, length}] =
-          Enum.filter(return.headers, fn h ->
-            {key, _} = h
-            key == "Content-Length"
-          end)
-
-        time_in_seconds = time_in_microseconds / 1_000_000
-
-        %{elapsed_time: time_in_seconds, bytes: String.to_integer(length), url: u}
+      Enum.map(urls, fn data ->
+        Enum.map(data, fn url ->
+          timed_fetch(url)
+        end)
+        |> Task.await_many(@ttl)
       end)
+      |> List.flatten()
 
     {:ok, responses}
+  end
+
+  defp timed_fetch(url) do
+    Task.async(fn ->
+      {time_in_microseconds, return} =
+        :timer.tc(fn ->
+          {_, reply} = HTTPoison.get(url, [], recv_timeout: @ttl)
+          reply
+        end)
+
+      [{_, length}] =
+        Enum.filter(return.headers, fn h ->
+          {key, _} = h
+          key == "Content-Length"
+        end)
+
+      time_in_seconds = time_in_microseconds / 1_000_000
+
+      %{elapsed_time: time_in_seconds, bytes: String.to_integer(length), url: url}
+    end)
+  end
+
+  defp timed_post(url, size) do
+    Task.async(fn ->
+      event_time = System.monotonic_time(:millisecond)
+
+      headers = [{"Content-length", size}]
+      body = ""
+      HTTPoison.post(url, body, headers, recv_timeout: @ttl)
+
+      time_in_milliseconds = System.monotonic_time(:millisecond) - event_time
+
+      %{elapsed_time: time_in_milliseconds / 1_000, bytes: size, url: url}
+    end)
   end
 
   @doc """
   Test upload speed against speedtest.net
 
-  example:
+  ## Examples
 
-    Speedtest.upload(%Speedtest{})
+    iex> Speedtest.upload(%Speedtest{})
 
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
     Logger.info("Testing Upload Speed...")
     {_, data} = generate_upload_data(speedtest)
 
+    threads =
+      case is_nil(speedtest.threads) do
+        true -> 1
+        false -> String.to_integer(speedtest.threads)
+      end
+
+    data = Enum.chunk_every(data, threads)
+
     responses =
-      Enum.map(data, fn {url, size} ->
-        event_time = System.monotonic_time(:millisecond)
-
-        headers = [{"Content-length", size}]
-        body = ""
-        {_, reply} = HTTPoison.post(url, body, headers)
-
-        time_in_milliseconds = System.monotonic_time(:millisecond) - event_time
-
-        %{elapsed_time: time_in_milliseconds / 1_000, bytes: size, url: url}
+      Enum.map(data, fn data ->
+        Enum.map(data, fn {url, size} ->
+          timed_post(url, size)
+        end)
+        |> Task.await_many(@ttl)
       end)
+      |> List.flatten()
 
     {:ok, responses}
   end
@@ -164,9 +198,9 @@ defmodule Speedtest do
   @doc """
   Determine distance between sets of [lat,lon] in km 
 
-  example:
+  ## Examples
 
-    Speedtest.distance(%Speedtest{})
+    iex> Speedtest.distance(%Speedtest{})
 
   """
   def distance(%Speedtest{} = speedtest \\ %Speedtest{}) do
@@ -190,9 +224,9 @@ defmodule Speedtest do
   @doc """
   Run the full speedtest.net test
 
-  example:
+  ## Examples
 
-    Speedtest.run()
+    iex> Speedtest.run()
 
   """
   def run() do
@@ -240,10 +274,10 @@ defmodule Speedtest do
 
     {_, reply} = Result.create(speedtest, replys)
 
-    speed = to_string(Float.round(reply.result.download, 2)) <> " Mbit/s"
+    speed = to_string(reply.result.download) <> " Mbit/s"
     Logger.info("Download: " <> speed)
 
-    speed = to_string(Float.round(reply.result.upload, 2)) <> " Mbit/s"
+    speed = to_string(reply.result.upload) <> " Mbit/s"
     Logger.info("Upload: " <> speed)
 
     config = reply.config
@@ -260,9 +294,9 @@ defmodule Speedtest do
   @doc """
   Ping an IP and return a tuple with the time
 
-  example:
+  ## Examples
 
-    Speedtest.ping("127.0.0.1")
+    iex> Speedtest.ping("127.0.0.1")
 
   """
   def ping(ip) do
@@ -274,8 +308,8 @@ defmodule Speedtest do
 
   ## Examples
 
-      iex> Speedtest.init()
-      {:ok, %Speedtest{config: [],exclude: nil,include: nil,result: nil,selected_server: nil,servers: [],threads: nil}}
+    iex> Speedtest.init()
+    {:ok, %Speedtest{config: [],exclude: nil,include: nil,result: nil,selected_server: nil,servers: [],threads: nil}}
 
 
   """
@@ -288,7 +322,7 @@ defmodule Speedtest do
     {:ok, reply}
   end
 
-  defp generate_download_urls(%Speedtest{} = speedtest \\ %Speedtest{}) do
+  defp generate_download_urls(%Speedtest{} = speedtest) do
     urls =
       Enum.map(speedtest.config.sizes.download, fn s ->
         size = to_string(s)
@@ -300,7 +334,7 @@ defmodule Speedtest do
     {:ok, urls}
   end
 
-  defp generate_upload_data(%Speedtest{} = speedtest \\ %Speedtest{}) do
+  defp generate_upload_data(%Speedtest{} = speedtest) do
     data =
       Enum.map(speedtest.config.sizes.upload, fn s ->
         {speedtest.selected_server.url, to_string(s)}
