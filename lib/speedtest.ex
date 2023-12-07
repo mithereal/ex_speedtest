@@ -23,9 +23,9 @@ defmodule Speedtest do
   Retrieve a the list of speedtest.net servers, optionally filtered
    to servers matching those specified in the servers argument
 
-  example:
+    ## Examples
 
-    Speedtest.fetch_servers(%Speedtest{})
+       iex> Speedtest.fetch_servers(%Speedtest{})
 
   """
   def fetch_servers(%Speedtest{} = speedtest \\ %Speedtest{}) do
@@ -64,9 +64,9 @@ defmodule Speedtest do
   Limit servers to the closest speedtest.net servers based on
   geographic distance
 
-  example:
+    ## Examples
 
-    Speedtest.choose_closest_servers()
+       iex> Speedtest.choose_closest_servers()
       
   """
   def choose_closest_servers(servers \\ [], amount \\ 2) do
@@ -79,9 +79,9 @@ defmodule Speedtest do
   Perform a speedtest.net "ping" to determine which speedtest.net
   server has the lowest latency
 
-  example:
+    ## Examples
 
-    Speedtest.choose_best_server([]})
+      iex> Speedtest.choose_best_server([])
       
   """
   def choose_best_server(servers) do
@@ -102,9 +102,9 @@ defmodule Speedtest do
   @doc """
   Test download speed against speedtest.net
 
-   example:
+  ## Examples
 
-    Speedtest.download(%Speedtest{})
+    iex> Speedtest.download(%Speedtest{})
 
   """
   def download(%Speedtest{} = speedtest \\ %Speedtest{}) do
@@ -136,9 +136,9 @@ defmodule Speedtest do
   @doc """
   Test upload speed against speedtest.net
 
-  example:
+  ## Examples
 
-    Speedtest.upload(%Speedtest{})
+    iex> Speedtest.upload(%Speedtest{})
 
   """
   def upload(%Speedtest{} = speedtest \\ %Speedtest{}) do
@@ -164,9 +164,9 @@ defmodule Speedtest do
   @doc """
   Determine distance between sets of [lat,lon] in km 
 
-  example:
+  ## Examples
 
-    Speedtest.distance(%Speedtest{})
+    iex> Speedtest.distance(%Speedtest{})
 
   """
   def distance(%Speedtest{} = speedtest \\ %Speedtest{}) do
@@ -190,9 +190,9 @@ defmodule Speedtest do
   @doc """
   Run the full speedtest.net test
 
-  example:
+  ## Examples
 
-    Speedtest.run()
+    iex> Speedtest.run()
 
   """
   def run() do
@@ -260,9 +260,9 @@ defmodule Speedtest do
   @doc """
   Ping an IP and return a tuple with the time
 
-  example:
+  ## Examples
 
-    Speedtest.ping("127.0.0.1")
+    iex> Speedtest.ping("127.0.0.1")
 
   """
   def ping(ip) do
@@ -274,8 +274,8 @@ defmodule Speedtest do
 
   ## Examples
 
-      iex> Speedtest.init()
-      {:ok, %Speedtest{config: [],exclude: nil,include: nil,result: nil,selected_server: nil,servers: [],threads: nil}}
+    iex> Speedtest.init()
+    {:ok, %Speedtest{config: [],exclude: nil,include: nil,result: nil,selected_server: nil,servers: [],threads: nil}}
 
 
   """
