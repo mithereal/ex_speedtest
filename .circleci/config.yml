@@ -3,7 +3,7 @@ jobs:  # basic units of work in a run
   build:  # runs not using Workflows must have a `build` job as entry point
     parallelism: 1  # run only one instance of this job
     docker:  # run the steps with Docker
-      - image: circleci/elixir:1.9  # ...with this image as the primary container; this is where all `steps` will run
+      - image: cimg/elixir:1.15.5-erlang-26.0.2  # ...with this image as the primary container; this is where all `steps` will run
         environment:  # environment variables for primary container
           MIX_ENV: test
 
@@ -38,4 +38,4 @@ jobs:  # basic units of work in a run
 
       - store_test_results:  # upload junit test results for display in Test Summary
           # Read more: https://circleci.com/docs/2.0/collect-test-data/
-          path: _build/test/lib/apeedtest # Replace with the name of your :app
+          path: _build/test/lib/speedtest # Replace with the name of your :app
