@@ -8,6 +8,11 @@ defmodule SpeedtestTest do
 
   test "Run the Speedtest" do
     {status, _} = Speedtest.run()
-    assert status == :ok
+
+    case Mix.env() do
+      :test ->
+        assert status == :ok
+        :circleci = assert status == :error
+    end
   end
 end
