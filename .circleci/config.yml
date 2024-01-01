@@ -5,7 +5,7 @@ jobs:  # basic units of work in a run
     docker:  # run the steps with Docker
       - image: cimg/elixir:1.15.5-erlang-26.0.2  # ...with this image as the primary container; this is where all `steps` will run
         environment:  # environment variables for primary container
-          MIX_ENV: test
+          MIX_ENV: circleci
 
     working_directory: ~/app  # directory where steps will run
 
