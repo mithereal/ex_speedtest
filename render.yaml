@@ -1,0 +1,14 @@
+services:
+  - type: cron
+    name: ex-speedtest
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: starter
+    # Runs every 6 hours (adjust or trigger manually from the Render dashboard)
+    schedule: "0 */6 * * *"
+    dockerCommand: bin/speedtest eval "IO.inspect(Speedtest.run())"
+    envVars:
+      - key: MIX_ENV
+        value: prod

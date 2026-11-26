@@ -1,13 +1,19 @@
 defmodule Speedtest.Result do
-  import Speedtest.Decoder
+  @moduledoc """
+  Represents a completed Speedtest measurement and handles formatting and
+  sharing results with Speedtest.net.
+  """
 
-  alias Speedtest.Result
+  import Speedtest.Decoder, only: [to_integer: 1]
+
+  alias Speedtest.HTTP
 
   @default_key "297aae72"
-
-  @moduledoc """
-  A speedtest result.
-  """
+  @share_url "https://speedtest.net"
+  @share_headers [
+    {"Referer", "https://speedtest.net"},
+    {"Content-Type", "application/x-www-form-urlencoded"}
+  ]
 
   defstruct download: nil,
             upload: nil,
@@ -19,136 +25,133 @@ defmodule Speedtest.Result do
             bytes_sent: 0,
             share: nil
 
+  @type t :: %__MODULE__{
+               download: float() | nil,
+               upload: float() | nil,
+               ping: tuple() | number() | nil,
+               server: map() | nil,
+               client: map() | nil,
+               timestamp: DateTime.t() | nil,
+               bytes_received: non_neg_integer(),
+               bytes_sent: non_neg_integer(),
+               share: String.t() | nil
+             }
+
   @doc """
-  Create a result from a speedtest
+  Creates a `%Speedtest.Result{}` from upload and download transfer samples
+  and attaches it to the given `speedtest` struct/map.
   """
+  @spec create(map(), {list(map()), list(map())}) :: {:ok, map()}
   def create(speedtest, {upload_reply, download_reply}) do
-    upload_times =
-      Enum.map(upload_reply, fn x ->
-        x.elapsed_time
-      end)
+    {ul_mbps, ul_bps, bytes_sent} = calculate_metrics(upload_reply)
+    {dl_mbps, dl_bps, bytes_received} = calculate_metrics(download_reply)
 
-    upload_sizes =
-      Enum.map(upload_reply, fn x ->
-        to_integer(x.bytes)
-      end)
+    updated_client = %{
+      speedtest.config.client
+    | ispdlavg: round(dl_bps),
+      ispulavg: round(ul_bps)
+    }
 
-    upload_total_time_in_sec = Enum.sum(upload_times)
-
-    upload_size_total_bytes = Enum.sum(upload_sizes)
-
-    upload_size_total_mb = upload_size_total_bytes / 1_000_000
-
-    upload_size_total_mbit = upload_size_total_mb * 8
-
-    upload = upload_size_total_mbit / upload_total_time_in_sec
-
-    upload_avg_sec = upload_total_time_in_sec / Enum.count(upload_reply)
-
-    upload_bps = upload_size_total_bytes / upload_avg_sec
-
-    download_times =
-      Enum.map(download_reply, fn x ->
-        x.elapsed_time
-      end)
-
-    download_sizes =
-      Enum.map(download_reply, fn x ->
-        to_integer(x.bytes)
-      end)
-
-    download_time_in_sec = Enum.sum(download_times)
-
-    download_size_total_bytes = Enum.sum(download_sizes)
-
-    download_size_total_mb = download_size_total_bytes / 1_000_000
-
-    download_size_total_mbit = download_size_total_mb * 8
-
-    download = download_size_total_mbit / download_time_in_sec
-
-    download_avg_sec = download_time_in_sec / Enum.count(download_reply)
-
-    download_bps = download_size_total_bytes / download_avg_sec
-
-    client = %{speedtest.config.client | ispdlavg: trunc(Float.round(download_bps))}
-    client = %{client | ispulavg: trunc(Float.round(upload_bps))}
-
-    result = %Result{
-      download: Float.round(download, 2),
-      upload: Float.round(upload, 2),
+    result = %__MODULE__{
+      download: Float.round(dl_mbps, 2),
+      upload: Float.round(ul_mbps, 2),
       ping: speedtest.selected_server.ping,
       server: speedtest.selected_server,
-      client: client,
+      client: updated_client,
       timestamp: DateTime.utc_now(),
-      bytes_received: download_size_total_bytes,
-      bytes_sent: upload_size_total_bytes,
+      bytes_received: bytes_received,
+      bytes_sent: bytes_sent,
       share: nil
     }
 
-    reply = %{speedtest | result: result}
-
-    {:ok, reply}
+    {:ok, %{speedtest | result: result}}
   end
 
   @doc """
-  Share the results with speedtest.net
+  Submits the result to Speedtest.net and populates the `:share` PNG URL.
+  Returns `{:ok, updated_result}` or `{:error, reason}`.
   """
-  def share(%Result{} = result) do
-    config_key = Application.get_env(:speedtest, :key)
+  @spec share(t()) :: {:ok, t()} | {:error, term()}
+  def share(%__MODULE__{} = result) do
+    ping_ms = extract_ping_ms(result.ping)
+    download_kbps = round(result.download * 1000)
+    upload_kbps = round(result.upload * 1000)
+    rounded_ping = round(ping_ms)
 
-    key =
-      case config_key do
-        nil ->
-          @default_key
+    body = build_share_payload(result, rounded_ping, download_kbps, upload_kbps)
 
-        _ ->
-          config_key
-      end
+    with {:ok, %{status_code: 200, body: resp_body}} <-
+           HTTP.client().post(@share_url, body, @share_headers, follow_redirect: true),
+         {:ok, result_id} <- parse_result_id(resp_body) do
+      {:ok, %{result | share: "https://speedtest.netresult/#{result_id}.png"}}
+    else
+      {:ok, %{status_code: status, body: resp_body}} ->
+        {:error, {:http_error, status, resp_body}}
 
-    {_, _, ping} = result.ping
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 
-    hash =
-      :crypto.hash(
-        :md5,
-        to_string(ping) <>
-          "-" <> to_string(result.upload) <> "-" <> to_string(result.download) <> "-" <> key
-      )
-      |> Base.encode16()
+  # --- Private Helpers ---
 
-    download = round(result.download)
-    ping = round(ping)
-    upload = round(result.upload)
+  defp calculate_metrics([]), do: {0.0, 0.0, 0}
 
-    api_data = [
-      "recommendedserverid=" <> to_string(result.server.id),
-      "ping=" <> to_string(ping),
-      "screenresolution=",
-      "promo=",
-      "download=" <> to_string(download),
-      "screendpi=",
-      "upload=" <> to_string(upload),
-      "testmethod=http",
-      "hash=" <> hash,
-      "touchscreen=none",
-      "startmode=pingselect",
-      "accuracy=1",
-      "bytesreceived=" <> to_string(result.bytes_received),
-      "bytessent=" <> to_string(result.bytes_sent),
-      "serverid=" <> to_string(result.server.id)
-    ]
+  defp calculate_metrics(samples) do
+    {total_bytes, total_sec, count} =
+      Enum.reduce(samples, {0, 0.0, 0}, fn sample, {bytes_acc, time_acc, count_acc} ->
+        {
+          bytes_acc + to_integer(sample.bytes),
+          time_acc + sample.elapsed_time,
+          count_acc + 1
+        }
+      end)
 
-    url = "https://www.speedtest.net/api/api.php"
-    headers = [{"Referer", "http://c.speedtest.net/flash/speedtest.swf"}]
-    body = Enum.join(api_data, "&")
-    {_, response} = HTTPoison.post(url, body, headers)
+    if total_sec > 0 do
+      mbps = total_bytes / 1_000_000 * 8 / total_sec
+      avg_sec = total_sec / count
+      bps = total_bytes / avg_sec
+      {mbps, bps, total_bytes}
+    else
+      {0.0, 0.0, total_bytes}
+    end
+  end
 
-    res = Regex.run(~r{resultid=(.)}, response.body)
+  defp extract_ping_ms({:ok, _host, ms}), do: ms
+  defp extract_ping_ms(ms) when is_number(ms), do: ms
 
-    image = List.last(res)
+  defp build_share_payload(result, ping, download, upload) do
+    key = Application.get_env(:speedtest, :key, @default_key)
+    hash = compute_hash(ping, upload, download, key)
 
-    share = "http://www.speedtest.net/result/" <> image <> ".png"
+    URI.encode_query(%{
+      "recommendedserverid" => result.server.id,
+      "ping" => ping,
+      "screenresolution" => "",
+      "promo" => "",
+      "download" => download,
+      "screendpi" => "",
+      "upload" => upload,
+      "testmethod" => "http",
+      "hash" => hash,
+      "touchscreen" => "none",
+      "startmode" => "pingselect",
+      "accuracy" => 1,
+      "bytesreceived" => result.bytes_received,
+      "bytessent" => result.bytes_sent,
+      "serverid" => result.server.id
+    })
+  end
 
-    %{result | share: share}
+  defp compute_hash(ping, upload, download, key) do
+    :crypto.hash(:md5, "#{ping}-#{upload}-#{download}-#{key}")
+    |> Base.encode16(case: :lower)
+  end
+
+  defp parse_result_id(body) do
+    case Regex.run(~r/resultid=(\d+)/, body) do
+      [_, id] -> {:ok, id}
+      nil -> {:error, {:invalid_response, body}}
+    end
   end
 end

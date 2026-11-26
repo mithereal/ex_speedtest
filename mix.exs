@@ -1,8 +1,8 @@
 defmodule Speedtest.MixProject do
   use Mix.Project
 
-  @version "1.1.2"
-  @source_url "https://github.com/mithereal/ex_speedtest.git"
+  @version "1.2.1"
+  @source_url "https://github.com/mithereal/ex_speedtest"
 
   def project do
     [
@@ -20,46 +20,48 @@ defmodule Speedtest.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :crypto]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:httpoison, "~> 2.2"},
-      {:sweet_xml, "~> 0.7.4"},
+      {:jason, "~> 1.4"},
       {:geocalc, "~> 0.8.5"},
       {:inch_ex, only: :docs},
-      {:mix_audit, ">= 0.0.0", only: [:dev, :test], runtime: false}
+      {:mix_audit, ">= 0.0.0", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.1", only: :test}
     ]
   end
 
-  defp description() do
+  defp description do
     "A Speedtest.net Client for Elixir"
   end
 
-  defp package() do
+  defp package do
     [
       name: "speedtest",
-      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/mithereal/ex_speedtest"}
+      links: %{
+        "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md",
+        "GitHub" => @source_url
+      }
     ]
   end
 
-  defp docs() do
+  defp docs do
     [
       main: "readme",
       name: "Speedtest",
       source_ref: "v#{@version}",
-      canonical: "http://hexdocs.pm/speedtest",
+      canonical: "https://hexdocs.pm/speedtest",
       source_url: @source_url,
-      extras: ["README.md", "LICENSE"]
+      extras: ["README.md", "CHANGELOG.md", "LICENSE"]
     ]
   end
 end
